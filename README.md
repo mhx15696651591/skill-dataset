@@ -2,7 +2,7 @@
 
 从 Label Studio 导出的 JSON 制作可复现的计算机视觉训练数据集。
 
-当前版本已实现 **BrushLabels 语义分割**：自动解析压缩 RLE、生成单通道 PNG mask、复制原图，并按指定随机种子划分 `train / val / test`。
+当前版本支持四条常用链路：分类、YOLO 目标检测、YOLO 实例分割、BrushLabels 语义分割；均可复制原图并按指定随机种子划分 `train / val / test`。
 
 ## 适用场景
 
@@ -10,7 +10,13 @@
 - 多类别语义分割，例如不同组织或病灶类别使用不同像素值；
 - Label Studio 使用 `BrushLabels` 标注，且同类笔刷区域应合并为同一类别 mask。
 
-脚本会先检查 JSON 的标注类型、控件名称、类别、重复标注和图片引用。对于 `RectangleLabels`、`PolygonLabels`、`Choices` 等检测到但尚未实现的路由，会报告结构而不会错误转换。
+同时支持：
+
+- `Choices`：单标签或多标签分类，输出分割后的图片与 CSV 标签；
+- `RectangleLabels`：YOLO Detect；
+- `PolygonLabels`：YOLO-Seg 实例分割。
+
+脚本会先检查 JSON 的标注类型、控件名称、类别、重复标注和图片引用，再路由到相应转换器。
 
 ## 输入
 
@@ -58,6 +64,27 @@ python scripts/build_semantic_brush_dataset.py `
   --class "头发=1"
 ```
 
+制作 Choices 分类数据集：
+
+```powershell
+python scripts/build_classification_dataset.py `
+  --input project.json `
+  --image-root D:\path\to\images `
+  --output D:\path\to\classification_v1 `
+  --field disease_label `
+  --qa-field qa_flag --qa-value QA_PASS
+```
+
+制作 YOLO 目标检测或实例分割数据集：
+
+```powershell
+python scripts/build_yolo_dataset.py `
+  --input project.json `
+  --image-root D:\path\to\images `
+  --output D:\path\to\yolo_dataset_v1 `
+  --mode detect       # PolygonLabels 时改为 seg
+```
+
 ## 数据安全与校验
 
 - 不修改原始 JSON 或原图；
@@ -69,6 +96,7 @@ python scripts/build_semantic_brush_dataset.py `
 ## 后续计划
 
 - `RectangleLabels → YOLO Detect / COCO`；
-- `PolygonLabels → YOLO-Seg / COCO 实例分割`；
-- `Choices → 单标签 / 多标签分类数据集`；
+- `COCO` 导出；
+- `KeyPointLabels → YOLO Pose / COCO Keypoints`；
+- `BrushLabels` 保留独立实例的 YOLO-Seg / COCO 转换；
 - 分类、框和 mask 混合标注的多任务数据集拆分。

@@ -20,9 +20,9 @@ Select a route from the actual annotation structure:
 
 | Label Studio result type | Route | Typical output |
 |---|---|---|
-| `choices` only | classification | image folders plus CSV/JSON labels |
-| `rectanglelabels` | detection | YOLO-Detect TXT or COCO |
-| `polygonlabels` | instance segmentation by default | YOLO-Seg TXT or COCO segmentation |
+| `choices` only | classification | image folders plus CSV labels |
+| `rectanglelabels` | detection | YOLO-Detect TXT |
+| `polygonlabels` | instance segmentation | YOLO-Seg TXT |
 | `brushlabels` with one merged foreground/class map per image | semantic segmentation | single-channel PNG class masks |
 | `brushlabels` that must preserve each separate object | instance segmentation | ask whether to emit YOLO-Seg or COCO |
 | multiple types | mixed task | report the branches and ask which output(s) to build |
@@ -79,10 +79,19 @@ Never overwrite source JSON or source images. Write a date/versioned output
 directory. Keep rejected or incomplete records in `report.json` so they can be
 reviewed rather than disappearing from sample counts.
 
-## Other routes
+## Classification, detection, and instance segmentation routes
 
-The detection, instance-segmentation, and classification converter scripts are
-not yet part of this first semantic-segmentation release. When the inspection
-selects one of those routes, explain the detected structure and either add the
-appropriate converter to this skill or use a project-specific existing
-converter; do not force it through semantic-mask conversion.
+- Use `build_classification_dataset.py` for a `Choices` control. It writes a
+  per-split CSV, copied images, class mapping, label distribution, and skipped
+  sample report. Use `--qa-field`, `--qa-value`, and repeatable `--annotator`
+  when a project requires final-label filtering.
+- Use `build_yolo_dataset.py --mode detect` for `RectangleLabels`. It writes
+  standard YOLO detection labels; tasks without boxes retain empty TXT labels.
+- Use `build_yolo_dataset.py --mode seg` for `PolygonLabels`. It writes
+  standard YOLO-Seg polygon labels; independent polygons remain independent
+  instances.
+
+These routes currently emit YOLO or CSV/JSON-style training data. COCO,
+KeyPointLabels, BrushLabels-as-instances, and mixed-task export are not yet
+implemented. For a mixed export, inspect first and ask which independent task
+datasets the user wants produced.
