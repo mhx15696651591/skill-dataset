@@ -1,0 +1,4 @@
+interface:
+  display_name: "视觉数据集制作"
+  short_description: "从 Label Studio JSON 制作视觉训练数据集"
+  default_prompt: "使用 $vision-dataset-builder 解析 Label Studio 导出并制作训练数据集。"
